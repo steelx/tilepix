@@ -34,7 +34,7 @@ type TileLayer struct {
 	// Empty should be set when all entries of the layer are NilTile.
 	Empty bool
 
-	batch      *pixel.Batch
+	Batch_     *pixel.Batch
 	IsDirty    bool
 	StaticBool bool
 
@@ -44,8 +44,8 @@ type TileLayer struct {
 
 // Batch returns the batch with the picture data from the tileset associated with this layer.
 func (l *TileLayer) Batch() (*pixel.Batch, error) {
-	if l.batch == nil {
-		log.Debug("TileLayer.Batch: batch not initialised, creating")
+	if l.Batch_ == nil {
+		log.Debug("TileLayer.Batch: Batch_ not initialised, creating")
 
 		if l.Tileset == nil {
 			err := errors.New("cannot create sprite from nil tileset")
@@ -54,21 +54,21 @@ func (l *TileLayer) Batch() (*pixel.Batch, error) {
 		}
 
 		pictureData := l.Tileset.setSprite()
-		l.batch = pixel.NewBatch(&pixel.TrianglesData{}, pictureData)
+		l.Batch_ = pixel.NewBatch(&pixel.TrianglesData{}, pictureData)
 	}
 
-	l.batch.Clear()
+	l.Batch_.Clear()
 
-	return l.batch, nil
+	return l.Batch_, nil
 }
 
 // Draw will use the TileLayers' batch to draw all tiles within the TileLayer to the target.
 func (l *TileLayer) Draw(target pixel.Target) error {
 	// Only draw if the layer is dirty.
 	if l.IsDirty {
-		// Initialise the batch
+		// Initialise the Batch_
 		if _, err := l.Batch(); err != nil {
-			log.WithError(err).Error("TileLayer.Draw: could not get batch")
+			log.WithError(err).Error("TileLayer.Draw: could not get Batch_")
 			return err
 		}
 
@@ -80,14 +80,14 @@ func (l *TileLayer) Draw(target pixel.Target) error {
 			// The Y component of the offset is set in Tiled from top down, setting here to negative because we want
 			// from the bottom up.
 			layerOffset := pixel.V(l.OffSetX, -l.OffSetY)
-			tile.Draw(tileIndex, ts.Columns, numRows, ts, l.batch, layerOffset)
+			tile.Draw(tileIndex, ts.Columns, numRows, ts, l.Batch_, layerOffset)
 		}
 
 		// Batch is drawn to, layer is no longer dirty.
 		l.SetDirty(false)
 	}
 
-	l.batch.Draw(target)
+	l.Batch_.Draw(target)
 
 	// Reset the dirty flag if the layer is not StaticBool
 	if !l.StaticBool {
